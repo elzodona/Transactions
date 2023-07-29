@@ -1,0 +1,66 @@
+.container {
+    background-color: whitesmoke;
+    border: 2px solid #333;
+    padding: 20px;
+    height: 800px;
+}
+
+.text-right {
+    margin-top: 20px;
+    text-align: right;
+}
+
+h1 {
+    margin-bottom: 50px;
+    color: red;
+}
+
+hr {
+    border: 1px solid #333;
+}
+
+.transaction-title {
+    padding: 5px;
+    margin-bottom: 10px;
+}
+
+ .transaction-title.om {
+     background-color: #f05a22;
+     color: #fff;
+ }
+
+ .transaction-title.wv {
+     background-color: #03c4a1;
+     color: #fff;
+ }
+
+ .transaction-title.wr {
+     background-color: #ffcc01;
+     color: #000;
+ }
+
+ .transaction-title.cb {
+     background-color: #007bff;
+     color: #fff;
+ }
+
+ .btn-primary {
+     background-color: #007bff;
+     border-color: #007bff;
+ }
+
+.transaction-section {
+    padding: 10px;
+    margin-bottom: 20px;
+    border-radius: 5px;
+}
+
+.btn-primary {
+    background-color: #007bff;
+    border-color: #007bff;
+}
+
+.btn-primary:hover {
+    background-color: #b32700;
+    border-color: #0056b3;
+}
