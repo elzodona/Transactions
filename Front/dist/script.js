@@ -113,3 +113,71 @@ function makeWithdrawal() {
         }
     });
 });
+const destinataireInput = document.getElementById('destinataire');
+destinataireInput.addEventListener('input', function () {
+    var _a;
+    return __awaiter(this, void 0, void 0, function* () {
+        const numeroDestinataire = destinataireInput.value;
+        if (numeroDestinataire) {
+            const nomDestinataire = yield getNomDestinataire(numeroDestinataire);
+            (_a = document.getElementById('destinataire_nom')) === null || _a === void 0 ? void 0 : _a.setAttribute('value', nomDestinataire);
+        }
+    });
+});
+const expediteurInput = document.getElementById('expediteur');
+expediteurInput.addEventListener('input', function () {
+    var _a;
+    return __awaiter(this, void 0, void 0, function* () {
+        const numeroExpediteur = expediteurInput.value;
+        if (numeroExpediteur) {
+            const nomExpediteur = yield getNomExpediteur(numeroExpediteur);
+            (_a = document.getElementById('expediteur_nom')) === null || _a === void 0 ? void 0 : _a.setAttribute('value', nomExpediteur);
+        }
+    });
+});
+function getNomDestinataire(numeroDestinataire) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const response = yield fetch(`http://127.0.0.1:8000/api/numClient/${numeroDestinataire}`);
+            if (response.ok) {
+                const client = yield response.json();
+                if (client.nom) {
+                    return client.prenom + ' ' + client.nom;
+                }
+                else {
+                    throw new Error("Le nom du destinataire n'a pas été trouvé.");
+                }
+            }
+            else {
+                throw new Error('Erreur lors de la récupération du nom du destinataire.');
+            }
+        }
+        catch (error) {
+            console.error(error.message);
+            return '';
+        }
+    });
+}
+function getNomExpediteur(numeroDestinataire) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const response = yield fetch(`http://127.0.0.1:8000/api/numClient/${numeroDestinataire}`);
+            if (response.ok) {
+                const client = yield response.json();
+                if (client.nom) {
+                    return client.prenom + ' ' + client.nom;
+                }
+                else {
+                    throw new Error("Le nom du destinataire n'a pas été trouvé.");
+                }
+            }
+            else {
+                throw new Error('Erreur lors de la récupération du nom du destinataire.');
+            }
+        }
+        catch (error) {
+            console.error(error.message);
+            return '';
+        }
+    });
+}

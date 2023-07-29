@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\TransactionController;
+use App\Http\Controllers\ClientController;
 
 /*
 |--------------------------------------------------------------------------
@@ -24,3 +25,6 @@ Route::post('/transactions/depot', [TransactionController::class, 'depot']);
 Route::post('/transactions/retrait', [TransactionController::class, 'retrait']);
 
 Route::post('/transactions/transfert', [TransactionController::class, 'transfert']);
+
+Route::get('/numClient/{num}', [ClientController::class, 'getClientByNum']);
+

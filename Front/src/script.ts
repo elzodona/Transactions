@@ -108,3 +108,63 @@ document.getElementById('validerBtn')?.addEventListener('click', async function 
 });
 
 
+const destinataireInput = document.getElementById('destinataire') as HTMLInputElement;
+
+destinataireInput.addEventListener('input', async function () {
+    const numeroDestinataire = destinataireInput.value;
+    if (numeroDestinataire) {
+        const nomDestinataire = await getNomDestinataire(numeroDestinataire);
+        document.getElementById('destinataire_nom')?.setAttribute('value', nomDestinataire);
+    }
+});
+
+const expediteurInput = document.getElementById('expediteur') as HTMLInputElement;
+
+expediteurInput.addEventListener('input', async function () {
+    const numeroExpediteur = expediteurInput.value;
+    if (numeroExpediteur) {
+        const nomExpediteur = await getNomExpediteur(numeroExpediteur);
+        document.getElementById('expediteur_nom')?.setAttribute('value', nomExpediteur);
+    }
+});
+
+async function getNomDestinataire(numeroDestinataire: string): Promise<string> {
+    try {
+        const response = await fetch(`http://127.0.0.1:8000/api/numClient/${numeroDestinataire}`);
+        if (response.ok) {
+            const client = await response.json();
+
+            if (client.nom) {
+                return client.prenom + ' ' + client.nom;
+            } else {
+                throw new Error("Le nom du destinataire n'a pas été trouvé.");
+            }
+        } else {
+            throw new Error('Erreur lors de la récupération du nom du destinataire.');
+        }
+    } catch (error) {
+        console.error(error.message);
+        return '';
+    }
+}
+
+
+async function getNomExpediteur(numeroDestinataire: string): Promise<string> {
+    try {
+        const response = await fetch(`http://127.0.0.1:8000/api/numClient/${numeroDestinataire}`);
+        if (response.ok) {
+            const client = await response.json();
+
+            if (client.nom) {
+                return client.prenom + ' ' + client.nom;
+            } else {
+                throw new Error("Le nom du destinataire n'a pas été trouvé.");
+            }
+        } else {
+            throw new Error('Erreur lors de la récupération du nom du destinataire.');
+        }
+    } catch (error) {
+        console.error(error.message);
+        return '';
+    }
+}
