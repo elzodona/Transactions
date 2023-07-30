@@ -32,6 +32,54 @@ async function showNotification(message: string) {
     notification.style.display = 'none';
 }
 
+
+document.getElementById('validerBtn')?.addEventListener('click', async function () {
+    const trans_type = document.getElementById('type_transaction') as HTMLSelectElement;
+    const selectedValue = trans_type.value;
+
+    if (selectedValue === 'depot') {
+        await makeDeposit();
+    } else if (selectedValue === 'retrait') {
+        await makeRetrait();   
+    }else {
+        await makeTransfert(); 
+    }
+});
+
+async function makeTransfert() {
+  const destinataireInput = document.getElementById('destinataire') as HTMLInputElement;
+  const expediteurInput = document.getElementById('expediteur') as HTMLInputElement;
+  const fournisseurInput = document.getElementById('fournisseur') as HTMLInputElement;
+  const montantInput = document.getElementById('montant') as HTMLInputElement;
+
+  const data = {
+    destinataire: destinataireInput.value,
+    expediteur: expediteurInput.value,
+    fournisseur: fournisseurInput.value,
+    montant: parseInt(montantInput.value, 10)
+  };
+
+  try {
+    const response = await fetch('http://127.0.0.1:8000/api/transactions/transfert', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(data)
+    });
+
+    if (!response.ok) {
+      throw new Error('La requête a échoué.');
+    }
+
+    const responseData = await response.json();
+    console.log('Réponse de l\'API:', responseData);
+
+  } catch (error) {
+    console.error('Erreur lors de la requête API:', error);
+  }
+}
+
 async function makeDeposit() {
     const destinataireInput = document.getElementById('destinataire') as HTMLInputElement;
     const expediteurInput = document.getElementById('expediteur') as HTMLInputElement;
@@ -70,7 +118,7 @@ async function makeDeposit() {
     }
 }
 
-async function makeWithdrawal() {
+async function makeRetrait() {
     const expediteurInput = document.getElementById('expediteur') as HTMLInputElement;
     const fournisseurSelect = document.getElementById('fournisseur') as HTMLSelectElement;
     const montantInput = document.getElementById('montant') as HTMLInputElement;
@@ -80,7 +128,7 @@ async function makeWithdrawal() {
     const montant = parseInt(montantInput.value, 10);
 
     if (!expediteur || !fournisseur || isNaN(montant)) {
-        alert("Veuillez remplir tous les champs correctement.");
+        showNotification("Veuillez remplir tous les champs correctement.");
         return;
     }
 
@@ -106,17 +154,6 @@ async function makeWithdrawal() {
         showNotification("Une erreur s'est produite lors du retrait : " + error.message);
     }
 }
-
-document.getElementById('validerBtn')?.addEventListener('click', async function () {
-    const trans_type = document.getElementById('type_transaction') as HTMLSelectElement;
-    const selectedValue = trans_type.value;
-
-    if (selectedValue === 'depot') {
-        await makeDeposit();
-    } else if (selectedValue === 'retrait') {
-        await makeWithdrawal();   
-    }
-});
 
 const trans_type = document.getElementById('type_transaction') as HTMLSelectElement;
 const destinataireSection = document.querySelector('.transaction-section.destinataire') as HTMLElement;

@@ -110,7 +110,7 @@ class TransactionController extends Controller
     public function transfert(Request $request)
     {
         $request->validate([
-            'expediteur' => 'required',
+            'destinataire' => 'required',
             'expediteur' => 'required',
             'fournisseur' => 'required',
             'montant' => 'required|numeric|min:0',
@@ -121,10 +121,10 @@ class TransactionController extends Controller
         try {
 
             if ($request->expediteur && $request->expediteur) {
-                $expediteur_compte = Compte::where('num_compte', $request->fournisseur . '_' . $request->expediteur)->lockForUpdate()->first();
+                $destinataire_compte = Compte::where('num_compte', $request->fournisseur . '_' . $request->destinataire)->lockForUpdate()->first();
                 $expediteur_compte = Compte::where('num_compte', $request->fournisseur . '_' . $request->expediteur)->lockForUpdate()->first();
 
-                if (!$expediteur_compte || !$expediteur_compte) {
+                if (!$destinataire_compte || !$expediteur_compte) {
                     return response()->json(['error' => 'Les comptes de l\'expéditeur et du expediteur doivent appartenir au même fournisseur et être enregistrés pour effectuer le transfert.'], 422);
                 }
 
@@ -149,7 +149,7 @@ class TransactionController extends Controller
                 }
 
                 $expediteur_compte->decrement('solde', $montantTotal);
-                $expediteur_compte->increment('solde', $request->montant);
+                $destinataire_compte->increment('solde', $request->montant);
 
                 $transaction = Transaction::create([
                     'montant' => $request->montant,
@@ -157,7 +157,7 @@ class TransactionController extends Controller
                     'code' => 'TRANSFERT' . time(),
                     'frais' => $frais,
                     'expediteur_compte_id' => $expediteur_compte->id,
-                    'destination_compte_id' => $expediteur_compte->id,
+                    'destination_compte_id' => $destinataire_compte->id,
                     'date_transaction' => now()
                 ]);
 
