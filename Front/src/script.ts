@@ -20,6 +20,17 @@
     })
 });
 
+async function showNotification(message: string) {
+    const notification = document.getElementById('notification') as HTMLDivElement;
+    const notificationMessage = document.getElementById('notificationMessage') as HTMLSpanElement;
+
+    notificationMessage.textContent = message;
+    notification.style.display = 'block';
+
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+
+    notification.style.display = 'none';
+}
 
 async function makeDeposit() {
     const destinataireInput = document.getElementById('destinataire') as HTMLInputElement;
@@ -33,7 +44,7 @@ async function makeDeposit() {
     const montant = parseInt(montantInput.value, 10);
 
     if (!destinataire || !expediteur || !fournisseur || isNaN(montant)) {
-        alert("Veuillez remplir tous les champs correctement.");
+        showNotification("Veuillez remplir tous les champs correctement.");
         return;
     }
 
@@ -48,34 +59,34 @@ async function makeDeposit() {
             body: JSON.stringify(data),
         });
 
-        if (response.ok) {
-            alert('Dépôt effectué avec succès.');
+       if (response.ok) {
+            showNotification("Dépôt effectué avec succès.");
         } else {
             const responseData = await response.json();
-            alert('Erreur lors du dépôt : ' + responseData.error);
+            showNotification("Erreur lors du dépôt : " + responseData.error);
         }
     } catch (error) {
-        alert('Une erreur s\'est produite lors du dépôt : ' + error.message);
+        showNotification("Une erreur s'est produite lors du dépôt : " + error.message);
     }
 }
 
 async function makeWithdrawal() {
-    const destinataireInput = document.getElementById('destinataire') as HTMLInputElement;
+    const expediteurInput = document.getElementById('expediteur') as HTMLInputElement;
     const fournisseurSelect = document.getElementById('fournisseur') as HTMLSelectElement;
     const montantInput = document.getElementById('montant') as HTMLInputElement;
 
-    const destinataire = destinataireInput.value;
+    const expediteur = expediteurInput.value;
     const fournisseur = fournisseurSelect.value;
     const montant = parseInt(montantInput.value, 10);
 
-    if (!destinataire || !fournisseur || isNaN(montant)) {
+    if (!expediteur || !fournisseur || isNaN(montant)) {
         alert("Veuillez remplir tous les champs correctement.");
         return;
     }
 
     try {
         const endpoint = 'http://127.0.0.1:8000/api/transactions/retrait';
-        const data = { destinataire, fournisseur, montant };
+        const data = { expediteur, fournisseur, montant };
         const response = await fetch(endpoint, {
             method: 'POST',
             headers: {
@@ -84,15 +95,15 @@ async function makeWithdrawal() {
             body: JSON.stringify(data),
         });
 
-        if (response.ok) {
+         if (response.ok) {
             const responseData = await response.json();
-            console.log('Retrait réussi:', responseData.message);
+            showNotification("Retrait réussi : " + responseData.message);
         } else {
             const errorData = await response.json();
-            console.error('Erreur de retrait:', errorData.message);
+            showNotification("Erreur de retrait : " + errorData.message);
         }
     } catch (error) {
-        console.error('Une erreur s\'est produite lors du retrait:', error);
+        showNotification("Une erreur s'est produite lors du retrait : " + error.message);
     }
 }
 
@@ -103,10 +114,22 @@ document.getElementById('validerBtn')?.addEventListener('click', async function 
     if (selectedValue === 'depot') {
         await makeDeposit();
     } else if (selectedValue === 'retrait') {
-        await makeWithdrawal();
+        await makeWithdrawal();   
     }
 });
 
+const trans_type = document.getElementById('type_transaction') as HTMLSelectElement;
+const destinataireSection = document.querySelector('.transaction-section.destinataire') as HTMLElement;
+
+trans_type.addEventListener('change', function () {
+    const selectedValue = trans_type.value;
+
+    if (selectedValue === 'retrait') {
+        destinataireSection.classList.add('hidden');
+    } else {
+        destinataireSection.classList.remove('hidden');
+    }
+});
 
 const destinataireInput = document.getElementById('destinataire') as HTMLInputElement;
 

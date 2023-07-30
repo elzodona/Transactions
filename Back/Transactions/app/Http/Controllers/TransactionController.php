@@ -36,31 +36,34 @@ class TransactionController extends Controller
                 return response()->json(['error' => 'Le montant minimum de dépôt est de ' . $montant_min . ' pour le fournisseur ' . $request->fournisseur . '.'], 422);
             }
 
-            $beneficiaire_compte = ($request->fournisseur !== 'wr') ? Compte::where('num_compte', $request->fournisseur . '_' . $request->destinataire)->lockForUpdate()->first() : null;
+            $beneficiaire_compte = ($request->fournisseur !== 'wr') ? Compte::where('num_compte', $request->fournisseur . '_' . $request->expediteur)->lockForUpdate()->first() : null;
 
             // if ($beneficiaire_compte && $beneficiaire_compte->solde < $request->montant) {
             //     return response()->json(['error' => 'Le solde du compte bénéficiaire est insuffisant pour effectuer le dépôt.'], 422);
             // }
 
             if ($request->fournisseur === 'wr' && !$beneficiaire_compte) {
-                $destinataire = Client::where('telephone', $request->destinataire)->first();
-                if (!$destinataire) {
+                $expediteur = Client::where('telephone', $request->expediteur)->first();
+                if (!$expediteur) {
                     return response()->json(['error' => 'Le bénéficiaire doit être un client enregistré pour effectuer le dépôt avec Wari.'], 422);
                 }
             } else {
-                $destinataire = null;
+                $expediteur = null;
             }
 
             if ($beneficiaire_compte) {
                 $beneficiaire_compte->increment('solde', $request->montant);
             }
 
+            $expediteur = Client::where('telephone', $request->expediteur)->first();
+
             $transaction = Transaction::create([
                 'montant' => $request->montant,
                 'type_trans' => 'depot',
                 'code' => $code,
+                'client_id' => $expediteur ? $expediteur : null,
                 'destination_compte_id' => $beneficiaire_compte ? $beneficiaire_compte->id : null,
-                'client_id' => ($request->fournisseur === 'wr') ? ($destinataire ? $destinataire->id : null) : ($request->expediteur ? Client::where('telephone', $request->expediteur)->value('id') : null),
+                'client_id' => ($request->fournisseur === 'wr') ? ($expediteur ? $expediteur->id : null) : ($request->expediteur ? Client::where('telephone', $request->expediteur)->value('id') : null),
                 'date_transaction' => now()
             ]);
 
@@ -76,12 +79,12 @@ class TransactionController extends Controller
     public function retrait(Request $request)
     {
         $request->validate([
-            'destinataire' => 'required',
+            'expediteur' => 'required',
             'fournisseur' => 'required',
             'montant' => 'required|numeric|min:0',
         ]);
 
-        $beneficiaire_compte = Compte::where('num_compte', $request->fournisseur . '_' . $request->destinataire)->first();
+        $beneficiaire_compte = Compte::where('num_compte', $request->fournisseur . '_' . $request->expediteur)->first();
 
         if (!$beneficiaire_compte) {
             return response()->json(['error' => 'Le bénéficiaire doit avoir un compte pour effectuer le retrait.'], 422);
@@ -97,7 +100,7 @@ class TransactionController extends Controller
             'montant' => $request->montant,
             'type_trans' => 'retrait',
             'code' => 'RETRAIT' . time(),
-            'destination_compte_id' => $beneficiaire_compte->id,
+            'expediteur_compte_id' => $beneficiaire_compte->id,
             'date_transaction' => now()
         ]);
 
@@ -108,7 +111,7 @@ class TransactionController extends Controller
     {
         $request->validate([
             'expediteur' => 'required',
-            'destinataire' => 'required',
+            'expediteur' => 'required',
             'fournisseur' => 'required',
             'montant' => 'required|numeric|min:0',
         ]);
@@ -117,12 +120,12 @@ class TransactionController extends Controller
 
         try {
 
-            if ($request->expediteur && $request->destinataire) {
+            if ($request->expediteur && $request->expediteur) {
                 $expediteur_compte = Compte::where('num_compte', $request->fournisseur . '_' . $request->expediteur)->lockForUpdate()->first();
-                $destinataire_compte = Compte::where('num_compte', $request->fournisseur . '_' . $request->destinataire)->lockForUpdate()->first();
+                $expediteur_compte = Compte::where('num_compte', $request->fournisseur . '_' . $request->expediteur)->lockForUpdate()->first();
 
-                if (!$expediteur_compte || !$destinataire_compte) {
-                    return response()->json(['error' => 'Les comptes de l\'expéditeur et du destinataire doivent appartenir au même fournisseur et être enregistrés pour effectuer le transfert.'], 422);
+                if (!$expediteur_compte || !$expediteur_compte) {
+                    return response()->json(['error' => 'Les comptes de l\'expéditeur et du expediteur doivent appartenir au même fournisseur et être enregistrés pour effectuer le transfert.'], 422);
                 }
 
                 $frais = $request->montant * (($request->fournisseur === 'cb') ? 0.05 : (($request->fournisseur === 'wr') ? 0.02 : 0.01));
@@ -146,7 +149,7 @@ class TransactionController extends Controller
                 }
 
                 $expediteur_compte->decrement('solde', $montantTotal);
-                $destinataire_compte->increment('solde', $request->montant);
+                $expediteur_compte->increment('solde', $request->montant);
 
                 $transaction = Transaction::create([
                     'montant' => $request->montant,
@@ -154,7 +157,7 @@ class TransactionController extends Controller
                     'code' => 'TRANSFERT' . time(),
                     'frais' => $frais,
                     'expediteur_compte_id' => $expediteur_compte->id,
-                    'destination_compte_id' => $destinataire_compte->id,
+                    'destination_compte_id' => $expediteur_compte->id,
                     'date_transaction' => now()
                 ]);
 
@@ -162,7 +165,7 @@ class TransactionController extends Controller
 
                 return response()->json(['message' => 'Transfert effectué avec succès', 'transaction' => $transaction]);
             } else {
-                return response()->json(['error' => 'L\'expéditeur et le destinataire doivent être spécifiés pour effectuer le transfert.'], 422);
+                return response()->json(['error' => 'L\'expéditeur et le expediteur doivent être spécifiés pour effectuer le transfert.'], 422);
             }
         } catch (\Exception $e) {
             DB::rollback();
