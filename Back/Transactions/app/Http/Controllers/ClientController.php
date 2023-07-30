@@ -6,6 +6,8 @@ use App\Http\Requests\StoreClientRequest;
 use App\Http\Requests\UpdateClientRequest;
 use Illuminate\Http\Request;
 use App\Models\Client;
+use App\Models\Compte;
+use App\Models\Transaction;
 
 class ClientController extends Controller
 {
@@ -17,6 +19,20 @@ class ClientController extends Controller
         $client = Client::where('telephone', $num)->first();
         return $client;
 
+    }
+
+    public function transClient($num){
+        $client = Client::where('telephone', $num)->first();
+        $compts = Compte::where('client_id', $client->id)->get();
+
+        $transactions_by_fournisseur = [];
+        foreach ($compts as $compt) {
+            $transactions = Transaction::select('montant', 'type_trans', 'code', 'expediteur_compte_id', 'destination_compte_id', 'frais', 'date_transaction')
+            ->where('expediteur_compte_id', $compt->id)
+                ->get();
+            $transactions_by_fournisseur[$compt->fournisseur] = $transactions;
+        }
+        return $transactions_by_fournisseur;
     }
 
     public function index()

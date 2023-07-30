@@ -28,3 +28,5 @@ Route::post('/transactions/transfert', [TransactionController::class, 'transfert
 
 Route::get('/numClient/{num}', [ClientController::class, 'getClientByNum']);
 
+Route::get('/transClient/{num}', [ClientController::class, 'transClient']);
+

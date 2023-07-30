@@ -85,7 +85,7 @@ class TransactionController extends Controller
         ]);
 
         $beneficiaire_compte = Compte::where('num_compte', $request->fournisseur . '_' . $request->expediteur)->first();
-
+        
         if (!$beneficiaire_compte) {
             return response()->json(['error' => 'Le bénéficiaire doit avoir un compte pour effectuer le retrait.'], 422);
         }

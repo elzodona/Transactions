@@ -191,3 +191,105 @@ async function getNomExpediteur(numeroDestinataire: string): Promise<string> {
         return '';
     }
 }
+
+const infoIcon = document.getElementById('info-icon');
+infoIcon?.addEventListener('click', async function () {
+
+  const expediteurInput = document.getElementById('expediteur') as HTMLInputElement;
+  const numero = expediteurInput.value;
+  console.log(numero);
+  
+  const transactions = await recupererHistoriqueTransactions(numero);
+
+  if (transactions) {
+    mettreAJourContenuModal(transactions);
+    afficherModal();
+  }
+  
+});
+
+function afficherModal() {
+  const transactionHistoryModal = document.getElementById('transactionHistoryModal');
+  if (transactionHistoryModal) {
+    (transactionHistoryModal as any).show();
+  }
+}
+
+async function recupererHistoriqueTransactions(numero: string) {
+  try {
+    const response = await fetch(`http://127.0.0.1:8000/api/transClient/${numero}`);
+    if (response.ok) {
+      return await response.json();
+    } else {
+      throw new Error("Impossible de récupérer l'historique des transactions.");
+    }
+  } catch (error) {
+    console.error(error);
+    return null;
+  }
+}
+
+function mettreAJourContenuModal(transactions: any) {
+  const modalBody = document.querySelector('.modal-body');
+  if (modalBody) {
+    modalBody.innerHTML = '';
+
+    for (const fournisseur in transactions) {
+      if (transactions.hasOwnProperty(fournisseur)) {
+        const transactionsFournisseur = transactions[fournisseur];
+        if (transactionsFournisseur.length > 0) {
+          const sectionFournisseur = document.createElement('div');
+          sectionFournisseur.classList.add('transaction-provider');
+
+          const titreFournisseur = document.createElement('h5');
+          titreFournisseur.textContent = fournisseur;
+          sectionFournisseur.appendChild(titreFournisseur);
+
+          const table = document.createElement('table');
+          table.classList.add('table', 'table-striped');
+
+          const tableHeader = document.createElement('thead');
+          tableHeader.innerHTML = `
+            <tr>
+              <th>Montant</th>
+              <th>Type</th>
+              <th>Code</th>
+              <th>Date</th>
+            </tr>
+          `;
+          table.appendChild(tableHeader);
+
+          const tableBody = document.createElement('tbody');
+
+          for (const transaction of transactionsFournisseur) {
+            const row = document.createElement('tr');
+
+            const montantCell = document.createElement('td');
+            montantCell.textContent = transaction.montant;
+            row.appendChild(montantCell);
+
+            const typeCell = document.createElement('td');
+            typeCell.textContent = transaction.type_trans;
+            row.appendChild(typeCell);
+
+            const codeCell = document.createElement('td');
+            codeCell.textContent = transaction.code;
+            row.appendChild(codeCell);
+
+            const dateCell = document.createElement('td');
+            dateCell.textContent = transaction.date_transaction;
+            row.appendChild(dateCell);
+
+            tableBody.appendChild(row);
+          }
+
+          table.appendChild(tableBody);
+          sectionFournisseur.appendChild(table);
+
+          modalBody.appendChild(sectionFournisseur);
+        }
+      }
+    }
+  }
+}
+
