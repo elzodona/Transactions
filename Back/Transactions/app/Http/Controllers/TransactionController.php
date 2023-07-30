@@ -36,10 +36,6 @@ class TransactionController extends Controller
 
             $beneficiaire_compte = ($request->fournisseur !== 'wr') ? Compte::where('num_compte', $request->fournisseur . '_' . $request->expediteur)->lockForUpdate()->first() : null;
 
-            // if ($beneficiaire_compte && $beneficiaire_compte->solde < $request->montant) {
-            //     return response()->json(['error' => 'Le solde du compte bénéficiaire est insuffisant pour effectuer le dépôt.'], 422);
-            // }
-
             if ($request->fournisseur === 'wr' && !$beneficiaire_compte) {
                 $expediteur = Client::where('telephone', $request->expediteur)->first();
                 if (!$expediteur) {
