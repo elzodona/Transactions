@@ -29,8 +29,6 @@ class TransactionController extends Controller
 
         try {
 
-            $code = ($request->fournisseur === 'wr') ? str_pad(mt_rand(1, 999999999999999), 15, '0', STR_PAD_LEFT) : 'DEP' . time();
-
             $montant_min = ($request->fournisseur === 'wr') ? 1000 : (($request->fournisseur === 'cb') ? 10000 : 500);
             if ($request->montant < $montant_min) {
                 return response()->json(['error' => 'Le montant minimum de dépôt est de ' . $montant_min . ' pour le fournisseur ' . $request->fournisseur . '.'], 422);
@@ -60,7 +58,7 @@ class TransactionController extends Controller
             $transaction = Transaction::create([
                 'montant' => $request->montant,
                 'type_trans' => 'depot',
-                'code' => $code,
+                'code' => 'DEP' . time(),
                 'client_id' => $expediteur ? $expediteur : null,
                 'destination_compte_id' => $beneficiaire_compte ? $beneficiaire_compte->id : null,
                 'client_id' => ($request->fournisseur === 'wr') ? ($expediteur ? $expediteur->id : null) : ($request->expediteur ? Client::where('telephone', $request->expediteur)->value('id') : null),
