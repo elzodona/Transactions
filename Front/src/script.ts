@@ -73,7 +73,8 @@ async function makeTransfert() {
     }
 
     const responseData = await response.json();
-    console.log('Réponse de l\'API:', responseData);
+    // console.log('Réponse de l\'API:', responseData);
+    showNotification("Transfert réussi");
 
   } catch (error) {
     console.error('Erreur lors de la requête API:', error);
@@ -292,6 +293,7 @@ function mettreAJourContenuModal(transactions: any) {
               <th>Type</th>
               <th>Code</th>
               <th>Date</th>
+              <th>Action</th>
             </tr>
           `;
           table.appendChild(tableHeader);
@@ -317,6 +319,13 @@ function mettreAJourContenuModal(transactions: any) {
             dateCell.textContent = transaction.date_transaction;
             row.appendChild(dateCell);
 
+            const deleteTrans = document.createElement('button');
+            deleteTrans.textContent = "Annuler";
+            row.appendChild(deleteTrans);
+
+            deleteTrans.addEventListener('click', () => {
+              annulerTransaction(transaction.code);
+            });
             tableBody.appendChild(row);
           }
 
@@ -328,5 +337,178 @@ function mettreAJourContenuModal(transactions: any) {
       }
     }
   }
+}
+
+const addClient = document.getElementById('addClient') as HTMLButtonElement;
+addClient.addEventListener('click', async () => {
+
+    const nomInput = document.getElementById('nom') as HTMLInputElement;
+    const prenomInput = document.getElementById('prenom') as HTMLInputElement;
+    const telephoneInput = document.getElementById('telephone') as HTMLInputElement;
+
+    const nom = nomInput.value;
+    const prenom = prenomInput.value;
+    const telephone = telephoneInput.value;
+
+    try {
+        const response = await fetch('http://127.0.0.1:8000/api/addClient', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                nom: nom,
+                prenom: prenom,
+                telephone: telephone,
+            }),
+        });
+
+        if (response.ok) {
+            showNotification('Le client a été ajouté avec succès');
+        } else {
+            showNotification('Erreur lors de l\'ajout du client');
+        }
+    } catch (error) {
+        console.error('Erreur lors de l\'ajout du client :', error);
+    }
+});
+
+const addCompte = document.getElementById('addCompte') as HTMLButtonElement;
+addCompte.addEventListener('click', async () => {
+
+    const fournisseurInput = document.getElementById('four') as HTMLSelectElement;
+    const telephoneInput = document.getElementById('phone') as HTMLInputElement;
+
+    const fournisseur = fournisseurInput.value;
+    const telephone = telephoneInput.value;
+
+    try {
+        const response = await fetch('http://127.0.0.1:8000/api/addCompte', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                fournisseur: fournisseur,
+                telephone: telephone,
+            }),
+        });
+
+        if (response.ok) {
+            showNotification('Le compte a été ajouté avec succès');
+        } else {
+            showNotification('Erreur lors de l\'ajout du client');
+        }
+    } catch (error) {
+        console.error('Erreur lors de l\'ajout du client :', error);
+    }
+});
+
+const listerComptesBtn = document.querySelector('#listerCompte') as HTMLButtonElement;
+const tableBody = document.getElementById('comptesTableBody') as HTMLTableSectionElement;
+
+listerComptesBtn.addEventListener('click', async () => {
+    try {
+        const response = await fetch('http://127.0.0.1:8000/api/listerCompte');
+        if (response.ok) {
+            const comptes = await response.json();
+            afficherComptesDansTableau(comptes);
+        } else {
+            console.error('Erreur lors de la récupération des comptes');
+        }
+    } catch (error) {
+        console.error('Erreur lors de la récupération des comptes :', error);
+    }
+});
+
+const tabs = document.querySelector('.tabs') as HTMLElement;
+
+function afficherComptesDansTableau(comptes: any[]) {
+    tableBody.innerHTML = '';
+    tabs.style.display = 'block';
+
+    comptes.forEach((compte) => {
+        const row = tableBody.insertRow();
+
+        const num_compte = row.insertCell();
+        num_compte.textContent = compte.num_compte;
+
+        const solde = row.insertCell();
+        solde.textContent = compte.solde;
+
+        const prenomCell = row.insertCell();
+        prenomCell.textContent = compte.fournisseur;
+
+        const telephoneCell = row.insertCell();
+        telephoneCell.textContent = compte.client_id;
+
+        const etat = row.insertCell();
+        etat.textContent = compte.etat;
+
+        const actionCell = row.insertCell();
+
+        const boutonBloquer = document.createElement('button');
+        boutonBloquer.textContent = 'Bloquer';
+        boutonBloquer.addEventListener('click', () => {
+            bloquerCompte(compte.num_compte);
+        });
+
+        const boutonDeBloquer = document.createElement('button');
+        boutonDeBloquer.textContent = 'Débloquer';
+        boutonDeBloquer.addEventListener('click', () => {
+            debloquerCompte(compte.num_compte);
+        });
+
+        actionCell.appendChild(boutonBloquer);
+        actionCell.appendChild(boutonDeBloquer);
+    });
+}
+
+async function bloquerCompte(numCompte: string) {
+    try {
+        const response = await fetch(`http://127.0.0.1:8000/api/bloquerCompte/${numCompte}`, {
+            method: 'GET',
+        });
+
+        if (response.ok) {
+            console.log('Compte bloqué avec succès');
+        } else {
+            console.error('Erreur lors du blocage du compte');
+        }
+    } catch (error) {
+        console.error('Erreur lors du blocage du compte:', error);
+    }
+}
+
+async function debloquerCompte(numCompte: string) {
+    try {
+        const response = await fetch(`http://127.0.0.1:8000/api/debloquerCompte/${numCompte}`, {
+            method: 'GET',
+        });
+
+        if (response.ok) {
+            console.log('Compte débloqué avec succès');
+        } else {
+            console.error('Erreur lors du déblocage du compte');
+        }
+    } catch (error) {
+        console.error('Erreur lors du déblocage du compte:', error);
+    }
+}
+
+async function annulerTransaction(codeTransaction: string) {
+    try {
+        const response = await fetch(`http://127.0.0.1:8000/api/annulerTransaction/${codeTransaction}`, {
+            method: 'GET',
+        });
+
+        if (response.ok) {
+            showNotification('Transaction annulée avec succès');
+        } else {
+            showNotification('Erreur lors de l\'annulation de la transaction');
+        }
+    } catch (error) {
+        console.error('Erreur lors de l\'annulation de la transaction:', error);
+    }
 }
 

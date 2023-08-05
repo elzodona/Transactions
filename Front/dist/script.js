@@ -77,7 +77,8 @@ function makeTransfert() {
                 throw new Error('La requête a échoué.');
             }
             const responseData = yield response.json();
-            console.log('Réponse de l\'API:', responseData);
+            // console.log('Réponse de l\'API:', responseData);
+            showNotification("Transfert réussi");
         }
         catch (error) {
             console.error('Erreur lors de la requête API:', error);
@@ -294,6 +295,7 @@ function mettreAJourContenuModal(transactions) {
               <th>Type</th>
               <th>Code</th>
               <th>Date</th>
+              <th>Action</th>
             </tr>
           `;
                     table.appendChild(tableHeader);
@@ -312,6 +314,12 @@ function mettreAJourContenuModal(transactions) {
                         const dateCell = document.createElement('td');
                         dateCell.textContent = transaction.date_transaction;
                         row.appendChild(dateCell);
+                        const deleteTrans = document.createElement('button');
+                        deleteTrans.textContent = "Annuler";
+                        row.appendChild(deleteTrans);
+                        deleteTrans.addEventListener('click', () => {
+                            annulerTransaction(transaction.code);
+                        });
                         tableBody.appendChild(row);
                     }
                     table.appendChild(tableBody);
@@ -321,4 +329,165 @@ function mettreAJourContenuModal(transactions) {
             }
         }
     }
+}
+const addClient = document.getElementById('addClient');
+addClient.addEventListener('click', () => __awaiter(this, void 0, void 0, function* () {
+    const nomInput = document.getElementById('nom');
+    const prenomInput = document.getElementById('prenom');
+    const telephoneInput = document.getElementById('telephone');
+    const nom = nomInput.value;
+    const prenom = prenomInput.value;
+    const telephone = telephoneInput.value;
+    try {
+        const response = yield fetch('http://127.0.0.1:8000/api/addClient', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                nom: nom,
+                prenom: prenom,
+                telephone: telephone,
+            }),
+        });
+        if (response.ok) {
+            showNotification('Le client a été ajouté avec succès');
+        }
+        else {
+            showNotification('Erreur lors de l\'ajout du client');
+        }
+    }
+    catch (error) {
+        console.error('Erreur lors de l\'ajout du client :', error);
+    }
+}));
+const addCompte = document.getElementById('addCompte');
+addCompte.addEventListener('click', () => __awaiter(this, void 0, void 0, function* () {
+    const fournisseurInput = document.getElementById('four');
+    const telephoneInput = document.getElementById('phone');
+    const fournisseur = fournisseurInput.value;
+    const telephone = telephoneInput.value;
+    try {
+        const response = yield fetch('http://127.0.0.1:8000/api/addCompte', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                fournisseur: fournisseur,
+                telephone: telephone,
+            }),
+        });
+        if (response.ok) {
+            showNotification('Le compte a été ajouté avec succès');
+        }
+        else {
+            showNotification('Erreur lors de l\'ajout du client');
+        }
+    }
+    catch (error) {
+        console.error('Erreur lors de l\'ajout du client :', error);
+    }
+}));
+const listerComptesBtn = document.querySelector('#listerCompte');
+const tableBody = document.getElementById('comptesTableBody');
+listerComptesBtn.addEventListener('click', () => __awaiter(this, void 0, void 0, function* () {
+    try {
+        const response = yield fetch('http://127.0.0.1:8000/api/listerCompte');
+        if (response.ok) {
+            const comptes = yield response.json();
+            afficherComptesDansTableau(comptes);
+        }
+        else {
+            console.error('Erreur lors de la récupération des comptes');
+        }
+    }
+    catch (error) {
+        console.error('Erreur lors de la récupération des comptes :', error);
+    }
+}));
+const tabs = document.querySelector('.tabs');
+function afficherComptesDansTableau(comptes) {
+    tableBody.innerHTML = '';
+    tabs.style.display = 'block';
+    comptes.forEach((compte) => {
+        const row = tableBody.insertRow();
+        const num_compte = row.insertCell();
+        num_compte.textContent = compte.num_compte;
+        const solde = row.insertCell();
+        solde.textContent = compte.solde;
+        const prenomCell = row.insertCell();
+        prenomCell.textContent = compte.fournisseur;
+        const telephoneCell = row.insertCell();
+        telephoneCell.textContent = compte.client_id;
+        const etat = row.insertCell();
+        etat.textContent = compte.etat;
+        const actionCell = row.insertCell();
+        const boutonBloquer = document.createElement('button');
+        boutonBloquer.textContent = 'Bloquer';
+        boutonBloquer.addEventListener('click', () => {
+            bloquerCompte(compte.num_compte);
+        });
+        const boutonDeBloquer = document.createElement('button');
+        boutonDeBloquer.textContent = 'Débloquer';
+        boutonDeBloquer.addEventListener('click', () => {
+            debloquerCompte(compte.num_compte);
+        });
+        actionCell.appendChild(boutonBloquer);
+        actionCell.appendChild(boutonDeBloquer);
+    });
+}
+function bloquerCompte(numCompte) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const response = yield fetch(`http://127.0.0.1:8000/api/bloquerCompte/${numCompte}`, {
+                method: 'GET',
+            });
+            if (response.ok) {
+                console.log('Compte bloqué avec succès');
+            }
+            else {
+                console.error('Erreur lors du blocage du compte');
+            }
+        }
+        catch (error) {
+            console.error('Erreur lors du blocage du compte:', error);
+        }
+    });
+}
+function debloquerCompte(numCompte) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const response = yield fetch(`http://127.0.0.1:8000/api/debloquerCompte/${numCompte}`, {
+                method: 'GET',
+            });
+            if (response.ok) {
+                console.log('Compte débloqué avec succès');
+            }
+            else {
+                console.error('Erreur lors du déblocage du compte');
+            }
+        }
+        catch (error) {
+            console.error('Erreur lors du déblocage du compte:', error);
+        }
+    });
+}
+function annulerTransaction(codeTransaction) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const response = yield fetch(`http://127.0.0.1:8000/api/annulerTransaction/${codeTransaction}`, {
+                method: 'GET',
+            });
+            if (response.ok) {
+                showNotification('Transaction annulée avec succès');
+            }
+            else {
+                showNotification('Erreur lors de l\'annulation de la transaction');
+            }
+        }
+        catch (error) {
+            console.error('Erreur lors de l\'annulation de la transaction:', error);
+        }
+    });
 }

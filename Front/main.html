@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transactions</title>
+    <link rel="stylesheet" href="./dist/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+
+<body style="display: flex;">
+
+    <div class="table-container tabs sty">
+        <table class="table">
+        <thead>
+        <tr>
+            <th>Numéro Compte</th>
+            <th>Solde</th>
+            <th>Fournisseur</th>
+            <th>Client</th>
+            <th>Etat</th>
+            <th>Action</th>
+        </tr>
+        </thead>
+        <tbody id="comptesTableBody">
+        </tbody>
+        </table>
+    </div>
+
+    <div class="container mt-3 rounded p-4 col-md-5 row-">
+
+        <h1 class="text-center">Breukh Transaction</h1>
+        <div>
+            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#ajoutClientModal">
+                Ajouter client
+            </button>
+            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#ajoutCompteModal">
+                Ajouter compte
+            </button>
+            <button type="button" class="btn btn-primary" id="listerCompte">
+                Liste comptes
+            </button>
+        </div>
+
+        <div class="transaction-section">
+            <h4 class="transaction-title" id="transaction-title">Expéditeur</h4>
+            <div class="row">
+                <div class="col">
+                    <div class="form-group">
+                        <label for="expediteur">Numéro expéditeur</label>
+                        <input type="text" class="form-control" id="expediteur"
+                            placeholder="Numéro de téléphone expéditeur">
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="form-group">
+                        <label for="expediteur_nom">Nom complet</label>
+                        <input type="text" class="form-control" id="expediteur_nom"
+                            placeholder="Nom complet de l'expéditeur">
+                    </div>
+                </div>
+                <button id="info-icon" class="btn btn-link"><i class="fa fa-info-circle" aria-hidden="true" data-toggle="modal" data-target="#transactionHistoryModal"></i></button>                   
+            </div>
+        </div>
+
+        <div class="transaction-section">
+            <h4 class="transaction-title" id="transaction-title">Transaction</h4>
+            <div class="row">
+                <div class="col">
+                    <div class="form-group">
+                        <label for="montant">Montant</label>
+                        <input type="number" class="form-control" id="montant" placeholder="Montant de la transaction">
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col">
+                    <div class="form-group">
+                        <label for="fournisseur">Fournisseur</label>
+                        <select class="form-control" id="fournisseur">
+                            <option>Choisis un fournisseur</option>
+                            <option value="om">Orange Money</option>
+                            <option value="wv">Wave</option>
+                            <option value="wr">Wari</option>
+                            <option value="cb">Compte Bancaire</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="form-group">
+                        <label for="type_transaction">Type de transaction</label>
+                        <select class="form-control" id="type_transaction">
+                            <option>Choisis un type de transaction</option>
+                            <option value="depot">Depot</option>
+                            <option value="retrait">Retrait</option>
+                            <option value="CbyC">Transfert Compte à Compte</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="transaction-section destinataire">
+            <h4 class="transaction-title" id="transaction-title">Destinataire</h4>
+            <div class="row">
+                <div class="col">
+                    <div class="form-group">
+                        <label for="destinataire">Numéro destinataire</label>
+                        <input type="text" class="form-control" id="destinataire"
+                            placeholder="Numéro de téléphone destinataire">
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="form-group">
+                        <label for="destinataire_nom">Nom complet</label>
+                        <input type="text" class="form-control" id="destinataire_nom"
+                            placeholder="Nom complet du destinataire">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-right">
+            <button type="submit" class="btn btn-primary btn-lg" id="validerBtn">Valider</button>
+        </div>
+
+    </div>
+
+    <div id="notification" class="notification">
+        <span id="notificationMessage" class="notification-message"></span>
+    </div>
+
+    <div class="modal" id="transactionHistoryModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Historique des transactions de l'expéditeur</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Fermer">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Fermer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<div class="modal fade" id="ajoutClientModal" tabindex="-1" role="dialog" aria-labelledby="ajoutClientModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="ajoutClientModalLabel">Ajouter client</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Fermer">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="ajoutClientForm">
+                    <div class="form-group">
+                        <label for="nom">Nom</label>
+                        <input type="text" class="form-control" id="nom" placeholder="Entrez le nom du client" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="prenom">Prénom</label>
+                        <input type="text" class="form-control" id="prenom" placeholder="Entrez le prénom du client"
+                            required>
+                    </div>
+                    <div class="form-group">
+                        <label for="telephone">Téléphone</label>
+                        <input type="text" class="form-control" id="telephone"
+                            placeholder="Entrez le numéro de téléphone du client" required>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Fermer</button>
+                        <button type="button" class="btn btn-primary" id="addClient">Ajouter</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <div class="modal fade" id="ajoutCompteModal" tabindex="-1" role="dialog" aria-labelledby="ajoutCompteModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="ajoutCompteModalLabel">Ajouter compte</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Fermer">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="ajoutCompteForm">
+                        <div class="form-group">
+                            <label for="phone">Telephone</label>
+                            <input type="text" class="form-control" id="phone" placeholder="Entrez le numéro du client" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="four">Fournisseur</label>
+                            <select class="form-control" id="four">
+                                <option>Choisis un fournisseur</option>
+                                <option value="om">Orange Money</option>
+                                <option value="wv">Wave</option>
+                                <option value="wr">Wari</option>
+                                <option value="cb">Compte Bancaire</option>
+                            </select>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Fermer</button>
+                            <button type="button" class="btn btn-primary" id="addCompte">Ajouter</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script src="./dist/script.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+</body>
+
+</html>

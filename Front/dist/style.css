@@ -138,3 +138,16 @@ tbody td {
     opacity: 1;
 }
 
+.table-container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+/* .sty{
+    margin-left: 1em;
+} */
+
+.tabs{
+    display: none;
+}
+

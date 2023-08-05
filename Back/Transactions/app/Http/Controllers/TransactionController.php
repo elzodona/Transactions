@@ -167,6 +167,19 @@ class TransactionController extends Controller
         }
     }
 
+    public function annulerTransaction($codeTransaction)
+    {
+        $transaction = Transaction::where('code', $codeTransaction)->first();
+
+        if (!$transaction) {
+            return response()->json(['message' => 'Transaction introuvable'], 404);
+        }
+
+        $transaction->delete();
+
+        return response()->json(['message' => 'Transaction annulée avec succès'], 200);
+    }
+
     public function index()
     {
         //
