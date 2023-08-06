@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 use App\Models\Transaction;
 use App\Models\Compte;
 use App\Models\Client;
+use DateTime;
 
 class TransactionController extends Controller
 {
@@ -31,7 +32,7 @@ class TransactionController extends Controller
 
             $montant_min = ($request->fournisseur === 'wr') ? 1000 : (($request->fournisseur === 'cb') ? 10000 : 500);
             if ($request->montant < $montant_min) {
-                return response()->json(['error' => 'Le montant minimum de dépôt est de ' . $montant_min . ' pour le fournisseur ' . $request->fournisseur . '.'], 422);
+                return response()->json(['message' => 'Le montant minimum de dépôt est de ' . $montant_min . ' pour le fournisseur ' . $request->fournisseur . '.'], 422);
             }
 
             $beneficiaire_compte = ($request->fournisseur !== 'wr') ? Compte::where('num_compte', $request->fournisseur . '_' . $request->expediteur)->lockForUpdate()->first() : null;
@@ -39,7 +40,7 @@ class TransactionController extends Controller
             if ($request->fournisseur === 'wr' && !$beneficiaire_compte) {
                 $expediteur = Client::where('telephone', $request->expediteur)->first();
                 if (!$expediteur) {
-                    return response()->json(['error' => 'Le bénéficiaire doit être un client enregistré pour effectuer le dépôt avec Wari.'], 422);
+                    return response()->json(['message' => 'Le bénéficiaire doit être un client enregistré pour effectuer le dépôt avec Wari.'], 422);
                 }
             } else {
                 $expediteur = null;
@@ -81,11 +82,14 @@ class TransactionController extends Controller
         $beneficiaire_compte = Compte::where('num_compte', $request->fournisseur . '_' . $request->expediteur)->first();
         
         if (!$beneficiaire_compte) {
-            return response()->json(['error' => 'Le bénéficiaire doit avoir un compte pour effectuer le retrait.'], 422);
+            return response()->json(['message' => 'Le bénéficiaire doit avoir un compte pour effectuer le retrait.'], 422);
+        }
+        if ($beneficiaire_compte->etat == 0) {
+            return response()->json(["message" => "Ce compte est bloqué et n'est pas autorisé à faire de retrait"]);
         }
 
         if ($beneficiaire_compte->solde < $request->montant) {
-            return response()->json(['error' => 'Le solde du compte bénéficiaire est insuffisant pour effectuer le retrait.'], 422);
+            return response()->json(['message' => 'Le solde du compte bénéficiaire est insuffisant pour effectuer le retrait.'], 422);
         }
 
         $beneficiaire_compte->decrement('solde', $request->montant);
@@ -119,21 +123,21 @@ class TransactionController extends Controller
                 $expediteur_compte = Compte::where('num_compte', $request->fournisseur . '_' . $request->expediteur)->lockForUpdate()->first();
 
                 if (!$destinataire_compte || !$expediteur_compte) {
-                    return response()->json(['error' => 'Les comptes de l\'expéditeur et du expediteur doivent appartenir au même fournisseur et être enregistrés pour effectuer le transfert.'], 422);
+                    return response()->json(['message' => 'Les comptes de l\'expéditeur et du expediteur doivent appartenir au même fournisseur et être enregistrés pour effectuer le transfert.'], 422);
                 }
 
                 $frais = $request->montant * (($request->fournisseur === 'cb') ? 0.05 : (($request->fournisseur === 'wr') ? 0.02 : 0.01));
                 $montantTotal = $request->montant + $frais;
 
                 if ($expediteur_compte->solde < $montantTotal) {
-                    return response()->json(['error' => 'Le solde du compte expéditeur est insuffisant pour effectuer le transfert.'], 422);
+                    return response()->json(['message' => 'Le solde du compte expéditeur est insuffisant pour effectuer le transfert.'], 422);
                 }
 
                 $montantMinimum = ($request->fournisseur === 'cb') ? 10000 : (($request->fournisseur === 'wr') ? 1000 : 500);
                 $montantMaximum = ($request->fournisseur === 'cb') ? 1000000 : 100000;
 
                 if ($request->montant < $montantMinimum || $request->montant > $montantMaximum) {
-                    return response()->json(['error' => 'Le montant du transfert ne respecte pas les limites autorisées.'], 422);
+                    return response()->json(['message' => 'Le montant du transfert ne respecte pas les limites autorisées.'], 422);
                 }
 
                 if ($request->fournisseur === 'om') {
@@ -159,7 +163,7 @@ class TransactionController extends Controller
 
                 return response()->json(['message' => 'Transfert effectué avec succès', 'transaction' => $transaction]);
             } else {
-                return response()->json(['error' => 'L\'expéditeur et le expediteur doivent être spécifiés pour effectuer le transfert.'], 422);
+                return response()->json(['message' => 'L\'expéditeur et le expediteur doivent être spécifiés pour effectuer le transfert.'], 422);
             }
         } catch (\Exception $e) {
             DB::rollback();
@@ -175,9 +179,27 @@ class TransactionController extends Controller
             return response()->json(['message' => 'Transaction introuvable'], 404);
         }
 
-        $transaction->delete();
+        if ($transaction->type_trans === 'depot' || $transaction->type_trans === 'transfert') {
+            $dateTransaction = new DateTime($transaction->date_transaction);
+            $dateActuelle = new DateTime();
+            $diff = $dateActuelle->diff($dateTransaction);
 
-        return response()->json(['message' => 'Transaction annulée avec succès'], 200);
+            if ($diff->days === 0) {
+                $lastTransaction = Transaction::where('expediteur_compte_id', $transaction->expediteur_compte_id)
+                    ->whereIn('type_trans', ['depot', 'transfert'])
+                    ->orderByDesc('date_transaction')
+                    ->first();
+
+                if ($lastTransaction && $lastTransaction->id === $transaction->id) {
+                    $transaction->delete();
+                    return response()->json(['message' => 'Transaction annulée avec succès'], 200);
+                } else {
+                    return response()->json(['message' => 'Cette transaction n\'est pas la dernière du compte'], 400);
+                }
+            } else {
+                return response()->json(['message' => 'Impossible d\'annuler une transaction de plus d\'un jour'], 400);
+            }
+        }
     }
 
     public function index()

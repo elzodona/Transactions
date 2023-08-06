@@ -21,18 +21,22 @@ class ClientController extends Controller
 
     }
 
-    public function transClient($num){
+    public function transClient($num)
+    {
         $client = Client::where('telephone', $num)->first();
-        $compts = Compte::where('client_id', $client->id)->get();
-
-        $transactions_by_fournisseur = [];
-        foreach ($compts as $compt) {
-            $transactions = Transaction::select('montant', 'type_trans', 'code', 'expediteur_compte_id', 'destination_compte_id', 'frais', 'date_transaction')
-            ->where('expediteur_compte_id', $compt->id)
-                ->get();
-            $transactions_by_fournisseur[$compt->fournisseur] = $transactions;
+        if (!$client) {
+            return response()->json(['message' => 'Client introuvable'], 404);
         }
-        return $transactions_by_fournisseur;
+
+        $clientComptesIds = Compte::where('client_id', $client->id)->pluck('id')->toArray();
+
+        $transactions = Transaction::select('montant', 'type_trans', 'code', 'expediteur_compte_id', 'destination_compte_id', 'frais', 'date_transaction')
+        ->where('client_id', $client->id)
+            ->orWhereIn('expediteur_compte_id', $clientComptesIds)
+            ->orWhereIn('destination_compte_id', $clientComptesIds)
+            ->get();
+
+        return response()->json(['transactions' => $transactions]);
     }
 
     public function addClient(Request $request){
@@ -48,7 +52,7 @@ class ClientController extends Controller
             "prenom" => $request->prenom,
             "telephone" => $request->telephone
         ]);
-        
+
         return response()->json(["message" => "Client créé avec succès", "data" => $client]);
 
     }

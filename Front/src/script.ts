@@ -32,7 +32,6 @@ async function showNotification(message: string) {
     notification.style.display = 'none';
 }
 
-
 document.getElementById('validerBtn')?.addEventListener('click', async function () {
     const trans_type = document.getElementById('type_transaction') as HTMLSelectElement;
     const selectedValue = trans_type.value;
@@ -63,21 +62,22 @@ async function makeTransfert() {
     const response = await fetch('http://127.0.0.1:8000/api/transactions/transfert', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
       },
       body: JSON.stringify(data)
     });
 
-    if (!response.ok) {
-      throw new Error('La requête a échoué.');
+    if (response.ok) {
+      const responseData = await response.json();
+      showNotification(responseData.message);
+    } else {
+      const errorData = await response.json();
+      showNotification(errorData.message);
     }
-
-    const responseData = await response.json();
-    // console.log('Réponse de l\'API:', responseData);
-    showNotification("Transfert réussi");
-
   } catch (error) {
     console.error('Erreur lors de la requête API:', error);
+    showNotification('Une erreur s\'est produite lors du transfert : ' + error.message);
   }
 }
 
@@ -109,11 +109,12 @@ async function makeDeposit() {
         });
 
        if (response.ok) {
-            showNotification("Dépôt effectué avec succès.");
-        } else {
-            const responseData = await response.json();
-            showNotification("Erreur lors du dépôt : " + responseData.error);
-        }
+        const responseData = await response.json();
+        showNotification(responseData.message);
+      } else {
+        const errorData = await response.json();
+        showNotification(errorData.message);
+      }
     } catch (error) {
         showNotification("Une erreur s'est produite lors du dépôt : " + error.message);
     }
@@ -140,17 +141,18 @@ async function makeRetrait() {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'Accept': 'application/json'
             },
             body: JSON.stringify(data),
         });
 
          if (response.ok) {
             const responseData = await response.json();
-            showNotification("Retrait réussi : " + responseData.message);
-        } else {
+            showNotification(responseData.message);
+          } else {
             const errorData = await response.json();
-            showNotification("Erreur de retrait : " + errorData.message);
-        }
+            showNotification(errorData.message);
+          }
     } catch (error) {
         showNotification("Une erreur s'est produite lors du retrait : " + error.message);
     }
@@ -209,7 +211,6 @@ async function getNomDestinataire(numeroDestinataire: string): Promise<string> {
     }
 }
 
-
 async function getNomExpediteur(numeroDestinataire: string): Promise<string> {
     try {
         const response = await fetch(`http://127.0.0.1:8000/api/numClient/${numeroDestinataire}`);
@@ -235,7 +236,6 @@ infoIcon?.addEventListener('click', async function () {
 
   const expediteurInput = document.getElementById('expediteur') as HTMLInputElement;
   const numero = expediteurInput.value;
-  console.log(numero);
   
   const transactions = await recupererHistoriqueTransactions(numero);
 
@@ -247,7 +247,7 @@ infoIcon?.addEventListener('click', async function () {
 });
 
 function afficherModal() {
-  const transactionHistoryModal = document.getElementById('transactionHistoryModal');
+  const transactionHistoryModal = document.getElementById('transactionHistoryModal') as HTMLElement;
   if (transactionHistoryModal) {
     (transactionHistoryModal as any).show();
   }
@@ -395,9 +395,8 @@ addCompte.addEventListener('click', async () => {
         });
 
         if (response.ok) {
-            showNotification('Le compte a été ajouté avec succès');
-        } else {
-            showNotification('Erreur lors de l\'ajout du client');
+            const responseData = await response.json();
+            showNotification(responseData.message);
         }
     } catch (error) {
         console.error('Erreur lors de l\'ajout du client :', error);
@@ -450,18 +449,43 @@ function afficherComptesDansTableau(comptes: any[]) {
         const boutonBloquer = document.createElement('button');
         boutonBloquer.textContent = 'Bloquer';
         boutonBloquer.addEventListener('click', () => {
-            bloquerCompte(compte.num_compte);
+          bloquerCompte(compte.num_compte);
         });
 
         const boutonDeBloquer = document.createElement('button');
         boutonDeBloquer.textContent = 'Débloquer';
         boutonDeBloquer.addEventListener('click', () => {
-            debloquerCompte(compte.num_compte);
+          debloquerCompte(compte.num_compte);
         });
+
+        const boutonFermer = document.createElement('button');
+        boutonFermer.textContent = 'Fermer';
+        boutonFermer.addEventListener('click', ()=>{
+          fermerCompte(compte.num_compte);
+        })
 
         actionCell.appendChild(boutonBloquer);
         actionCell.appendChild(boutonDeBloquer);
+        actionCell.appendChild(boutonFermer);
+
     });
+}
+
+async function fermerCompte(numCompte: string) {
+    try {
+      const response = await fetch(`http://127.0.0.1:8000/api/deleteCompte/${numCompte}`, {
+        method: 'GET',
+      })
+      if (response.ok) {
+        showNotification('Compte fermé avec succès')
+      }else{
+        showNotification('Erreur lors de la fermeture du compte')
+      }
+      
+    } catch (error) {
+      console.error('Erreur lors de la fermeture:', error);
+      
+    }
 }
 
 async function bloquerCompte(numCompte: string) {
@@ -471,9 +495,9 @@ async function bloquerCompte(numCompte: string) {
         });
 
         if (response.ok) {
-            console.log('Compte bloqué avec succès');
+            showNotification('Compte bloqué avec succès');
         } else {
-            console.error('Erreur lors du blocage du compte');
+            showNotification('Erreur lors du blocage du compte');
         }
     } catch (error) {
         console.error('Erreur lors du blocage du compte:', error);
@@ -487,9 +511,9 @@ async function debloquerCompte(numCompte: string) {
         });
 
         if (response.ok) {
-            console.log('Compte débloqué avec succès');
+            showNotification('Compte débloqué avec succès');
         } else {
-            console.error('Erreur lors du déblocage du compte');
+            showNotification('Erreur lors du déblocage du compte');
         }
     } catch (error) {
         console.error('Erreur lors du déblocage du compte:', error);
@@ -501,14 +525,57 @@ async function annulerTransaction(codeTransaction: string) {
         const response = await fetch(`http://127.0.0.1:8000/api/annulerTransaction/${codeTransaction}`, {
             method: 'GET',
         });
-
         if (response.ok) {
-            showNotification('Transaction annulée avec succès');
-        } else {
-            showNotification('Erreur lors de l\'annulation de la transaction');
-        }
+            const responseData = await response.json();
+            console.log(responseData);
+            
+            showNotification(responseData.message);
+          } else {
+            const errorData = await response.json();
+            console.log(errorData);
+
+            showNotification(errorData.message);
+          }
     } catch (error) {
         console.error('Erreur lors de l\'annulation de la transaction:', error);
     }
+}
+
+const filtrer = document.getElementById('filtrer') as HTMLButtonElement;
+filtrer.addEventListener('click', async () => {
+  const a = document.getElementById('ordreDate') as HTMLSelectElement;
+  const b = document.getElementById('ordreMontant') as HTMLSelectElement;
+  const byDate = a.value;
+  const byMontant = b.value;
+
+  try {
+    const transData = await recupererHistoriqueTransactions('783845870');
+    if (transData && transData.transactions) {
+      const trans = transData.transactions;
+      const newTrans = trierTransactions(trans, byDate, byMontant);
+      mettreAJourContenuModal(newTrans);
+      afficherModal();
+    } else {
+      console.error("Impossible de récupérer l'historique des transactions.");
+    }
+  } catch (error) {
+    console.error("Une erreur s'est produite lors de la récupération des transactions :", error);
+  }
+});
+
+function trierTransactions(transactions: any[], ordreDate: string, ordreMontant: string): any[] {
+    if (ordreDate === 'recent') {
+        transactions.sort((a, b) => new Date(b.date_transaction).getTime() - new Date(a.date_transaction).getTime());
+    } else {
+        transactions.sort((a, b) => new Date(a.date_transaction).getTime() - new Date(b.date_transaction).getTime());
+    }
+
+    if (ordreMontant === 'croissant') {
+        transactions.sort((a, b) => a.montant - b.montant);
+    } else {
+        transactions.sort((a, b) => b.montant - a.montant);
+    }
+
+    return transactions;
 }
 

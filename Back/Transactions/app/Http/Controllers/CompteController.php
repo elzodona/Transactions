@@ -22,6 +22,11 @@ class CompteController extends Controller
         ]);
         $client = Client::where('telephone', $request->telephone)->first();
 
+        $compteExist = Compte::where('num_compte', $request->fournisseur . '_' . $request->telephone)->first();
+        if ($compteExist) {
+            return response()->json(["message" => " Ce compte a déjà été créé"]);
+        };
+
         $compte = Compte::create([
             "num_compte" => $request->fournisseur.'_'.$request->telephone,
             "fournisseur" => $request->fournisseur,
@@ -37,9 +42,9 @@ class CompteController extends Controller
         return Compte::all();
     }
 
-    public function deleteCompte($compte_id)
+    public function deleteCompte($num)
     {
-        $compte = Compte::find($compte_id);
+        $compte = Compte::where('num_compte', $num)->first();
         if (!$compte) {
             return response()->json(['message' => 'Le compte n\'existe pas.'], 404);
         }
