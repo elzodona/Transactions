@@ -179,6 +179,11 @@ class TransactionController extends Controller
             return response()->json(['message' => 'Transaction introuvable'], 404);
         }
 
+        if ($transaction->type_trans === 'retrait') {
+            // $transaction->delete();
+            return response()->json(['message' => "Impossible d'annuler un retrait"], 200);
+        }
+
         if ($transaction->type_trans === 'depot' || $transaction->type_trans === 'transfert') {
             $dateTransaction = new DateTime($transaction->date_transaction);
             $dateActuelle = new DateTime();
@@ -200,6 +205,21 @@ class TransactionController extends Controller
                 return response()->json(['message' => 'Impossible d\'annuler une transaction de plus d\'un jour'], 400);
             }
         }
+    }
+
+    public function filtrerDateDesc(){
+    }
+
+    public function filtrerDateAsc()
+    {
+    }
+
+    public function filtrerMontantDesc()
+    {
+    }
+
+    public function filtrerMontantAsc()
+    {
     }
 
     public function index()

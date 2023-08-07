@@ -7,7 +7,7 @@
     <title>Transactions</title>
     <link rel="stylesheet" href="./dist/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 </head>
 
 <body style="display: flex;">
@@ -26,6 +26,40 @@
         </thead>
         <tbody id="comptesTableBody">
         </tbody>
+        </table>
+    </div>
+
+    
+    <div class="table-container">
+        <table class="table">
+            <div>
+                <label for="ordreDate">Filtrer par date :</label>
+                <select id="ordreDate">
+                    <option>Choisis une option</option>
+                    <option value="recent">plus récent</option>
+                    <option value="ancien">plus ancien</option>
+                </select>
+            </div>
+            
+            <div>
+                <label for="ordreMontant">Filtrer par montant :</label>
+                <select id="ordreMontant">
+                    <option>Choisis une option</option>
+                    <option value="croissant">Croissant</option>
+                    <option value="decroissant">Décroissant</option>
+                </select>
+            </div>
+            
+            <thead>
+                <tr>
+                    <th>montant</th>
+                    <th>type_trans</th>
+                    <th>code</th>
+                    <th>date_transaction</th>
+                </tr>
+            </thead>
+            <tbody id="histoTrans">
+            </tbody>
         </table>
     </div>
 
@@ -132,8 +166,8 @@
         <span id="notificationMessage" class="notification-message"></span>
     </div>
 
-    <div class="modal" id="transactionHistoryModal" tabindex="-1">
-        <div class="modal-dialog">
+    <!-- <div class="modal" id="transactionHistoryModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Historique des transactions de l'expéditeur</h5>
@@ -169,7 +203,7 @@
                 </div>
             </div>
         </div>
-    </div>
+    </div> -->
 
 <div class="modal fade" id="ajoutClientModal" tabindex="-1" role="dialog" aria-labelledby="ajoutClientModalLabel"
     aria-hidden="true">
@@ -245,7 +279,7 @@
 </div>
 
 
-<script src="./dist/script.js"></script>
+<script src="./dist/app.js"></script>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 

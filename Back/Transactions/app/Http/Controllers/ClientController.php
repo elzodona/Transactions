@@ -29,7 +29,7 @@ class ClientController extends Controller
         }
 
         $clientComptesIds = Compte::where('client_id', $client->id)->pluck('id')->toArray();
-
+        // return $clientComptesIds;
         $transactions = Transaction::select('montant', 'type_trans', 'code', 'expediteur_compte_id', 'destination_compte_id', 'frais', 'date_transaction')
         ->where('client_id', $client->id)
             ->orWhereIn('expediteur_compte_id', $clientComptesIds)

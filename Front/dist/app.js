@@ -243,98 +243,6 @@ function getNomExpediteur(numeroDestinataire) {
         }
     });
 }
-const infoIcon = document.getElementById('info-icon');
-infoIcon === null || infoIcon === void 0 ? void 0 : infoIcon.addEventListener('click', function () {
-    return __awaiter(this, void 0, void 0, function* () {
-        const expediteurInput = document.getElementById('expediteur');
-        const numero = expediteurInput.value;
-        const transactions = yield recupererHistoriqueTransactions(numero);
-        if (transactions) {
-            mettreAJourContenuModal(transactions);
-            afficherModal();
-        }
-    });
-});
-function afficherModal() {
-    const transactionHistoryModal = document.getElementById('transactionHistoryModal');
-    if (transactionHistoryModal) {
-        transactionHistoryModal.show();
-    }
-}
-function recupererHistoriqueTransactions(numero) {
-    return __awaiter(this, void 0, void 0, function* () {
-        try {
-            const response = yield fetch(`http://127.0.0.1:8000/api/transClient/${numero}`);
-            if (response.ok) {
-                return yield response.json();
-            }
-            else {
-                throw new Error("Impossible de récupérer l'historique des transactions.");
-            }
-        }
-        catch (error) {
-            console.error(error);
-            return null;
-        }
-    });
-}
-function mettreAJourContenuModal(transactions) {
-    const modalBody = document.querySelector('.modal-body');
-    if (modalBody) {
-        modalBody.innerHTML = '';
-        for (const fournisseur in transactions) {
-            if (transactions.hasOwnProperty(fournisseur)) {
-                const transactionsFournisseur = transactions[fournisseur];
-                if (transactionsFournisseur.length > 0) {
-                    const sectionFournisseur = document.createElement('div');
-                    sectionFournisseur.classList.add('transaction-provider');
-                    const titreFournisseur = document.createElement('h5');
-                    titreFournisseur.textContent = fournisseur;
-                    sectionFournisseur.appendChild(titreFournisseur);
-                    const table = document.createElement('table');
-                    table.classList.add('table', 'table-striped');
-                    const tableHeader = document.createElement('thead');
-                    tableHeader.innerHTML = `
-            <tr>
-              <th>Montant</th>
-              <th>Type</th>
-              <th>Code</th>
-              <th>Date</th>
-              <th>Action</th>
-            </tr>
-          `;
-                    table.appendChild(tableHeader);
-                    const tableBody = document.createElement('tbody');
-                    for (const transaction of transactionsFournisseur) {
-                        const row = document.createElement('tr');
-                        const montantCell = document.createElement('td');
-                        montantCell.textContent = transaction.montant;
-                        row.appendChild(montantCell);
-                        const typeCell = document.createElement('td');
-                        typeCell.textContent = transaction.type_trans;
-                        row.appendChild(typeCell);
-                        const codeCell = document.createElement('td');
-                        codeCell.textContent = transaction.code;
-                        row.appendChild(codeCell);
-                        const dateCell = document.createElement('td');
-                        dateCell.textContent = transaction.date_transaction;
-                        row.appendChild(dateCell);
-                        const deleteTrans = document.createElement('button');
-                        deleteTrans.textContent = "Annuler";
-                        row.appendChild(deleteTrans);
-                        deleteTrans.addEventListener('click', () => {
-                            annulerTransaction(transaction.code);
-                        });
-                        tableBody.appendChild(row);
-                    }
-                    table.appendChild(tableBody);
-                    sectionFournisseur.appendChild(table);
-                    modalBody.appendChild(sectionFournisseur);
-                }
-            }
-        }
-    }
-}
 const addClient = document.getElementById('addClient');
 addClient.addEventListener('click', () => __awaiter(this, void 0, void 0, function* () {
     const nomInput = document.getElementById('nom');
@@ -522,40 +430,104 @@ function annulerTransaction(codeTransaction) {
         }
     });
 }
-const filtrer = document.getElementById('filtrer');
-filtrer.addEventListener('click', () => __awaiter(this, void 0, void 0, function* () {
-    const a = document.getElementById('ordreDate');
-    const b = document.getElementById('ordreMontant');
-    const byDate = a.value;
-    const byMontant = b.value;
-    try {
-        const transData = yield recupererHistoriqueTransactions('783845870');
-        if (transData && transData.transactions) {
-            const trans = transData.transactions;
-            const newTrans = trierTransactions(trans, byDate, byMontant);
-            mettreAJourContenuModal(newTrans);
-            afficherModal();
+function recupererHistoriqueTransactions(numero) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const response = yield fetch(`http://127.0.0.1:8000/api/transClient/${numero}`);
+            if (response.ok) {
+                return yield response.json();
+            }
+            else {
+                throw new Error("Impossible de récupérer l'historique des transactions.");
+            }
         }
-        else {
-            console.error("Impossible de récupérer l'historique des transactions.");
+        catch (error) {
+            console.error(error);
+            return null;
+        }
+    });
+}
+const infoIcon = document.getElementById('info-icon');
+infoIcon === null || infoIcon === void 0 ? void 0 : infoIcon.addEventListener('click', function () {
+    return __awaiter(this, void 0, void 0, function* () {
+        const expediteurInput = document.getElementById('expediteur');
+        const numero = expediteurInput.value;
+        const transactions = yield recupererHistoriqueTransactions(numero);
+        if (transactions) {
+            afficherTransactions(transactions.transactions);
+        }
+    });
+});
+function afficherTransactions(transactions) {
+    const tableBody = document.querySelector('#histoTrans');
+    console.log(tableBody);
+    if (tableBody) {
+        tableBody.innerHTML = '';
+        for (const transaction of transactions) {
+            const row = document.createElement('tr');
+            const montantCell = document.createElement('td');
+            montantCell.textContent = transaction.montant;
+            row.appendChild(montantCell);
+            const typeCell = document.createElement('td');
+            typeCell.textContent = transaction.type_trans;
+            row.appendChild(typeCell);
+            const codeCell = document.createElement('td');
+            codeCell.textContent = transaction.code;
+            row.appendChild(codeCell);
+            const dateCell = document.createElement('td');
+            dateCell.textContent = transaction.date_transaction;
+            row.appendChild(dateCell);
+            const deleteTrans = document.createElement('button');
+            deleteTrans.textContent = "Annuler";
+            row.appendChild(deleteTrans);
+            deleteTrans.addEventListener('click', () => {
+                annulerTransaction(transaction.code);
+            });
+            tableBody.appendChild(row);
         }
     }
-    catch (error) {
-        console.error("Une erreur s'est produite lors de la récupération des transactions :", error);
+}
+const a = document.getElementById('ordreDate');
+const b = document.getElementById('ordreMontant');
+a.addEventListener('change', () => __awaiter(this, void 0, void 0, function* () {
+    const expediteurInput = document.getElementById('expediteur');
+    const numero = expediteurInput.value;
+    const transactions = yield recupererHistoriqueTransactions(numero);
+    if (transactions) {
+        appliquerFiltresDate(transactions);
     }
 }));
-function trierTransactions(transactions, ordreDate, ordreMontant) {
-    if (ordreDate === 'recent') {
-        transactions.sort((a, b) => new Date(b.date_transaction).getTime() - new Date(a.date_transaction).getTime());
+b.addEventListener('change', () => __awaiter(this, void 0, void 0, function* () {
+    const expediteurInput = document.getElementById('expediteur');
+    const numero = expediteurInput.value;
+    const transactions = yield recupererHistoriqueTransactions(numero);
+    if (transactions) {
+        appliquerFiltresMontant(transactions);
     }
-    else {
-        transactions.sort((a, b) => new Date(a.date_transaction).getTime() - new Date(b.date_transaction).getTime());
-    }
-    if (ordreMontant === 'croissant') {
-        transactions.sort((a, b) => a.montant - b.montant);
-    }
-    else {
-        transactions.sort((a, b) => b.montant - a.montant);
-    }
-    return transactions;
+}));
+function appliquerFiltresDate(transactions) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const byDate = a.value;
+        let transactionsFiltrees = [...transactions.transactions];
+        if (byDate === 'recent') {
+            transactionsFiltrees.sort((a, b) => new Date(b.date_transaction).getTime() - new Date(a.date_transaction).getTime());
+        }
+        else if (byDate === 'ancien') {
+            transactionsFiltrees.sort((a, b) => new Date(a.date_transaction).getTime() - new Date(b.date_transaction).getTime());
+        }
+        afficherTransactions(transactionsFiltrees);
+    });
+}
+function appliquerFiltresMontant(transactions) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const byMontant = b.value;
+        let transactionsFiltrees = [...transactions.transactions];
+        if (byMontant === 'croissant') {
+            transactionsFiltrees.sort((a, b) => a.montant - b.montant);
+        }
+        else if (byMontant === 'decroissant') {
+            transactionsFiltrees.sort((a, b) => b.montant - a.montant);
+        }
+        afficherTransactions(transactionsFiltrees);
+    });
 }
